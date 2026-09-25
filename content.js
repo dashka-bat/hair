@@ -33,8 +33,8 @@ const CONTENT = {
   photos: ["photos/1.jpg", "photos/2.jpg", "photos/3.jpg"],
   song: {
     file: "music.mp3", // дуугаа энэ хавтсанд music.mp3 нэрээр хуулна
-    title: "BIRDS OF A FEATHER",
-    artist: "Billie Eilish",
+    title: "ЯГ ЧАМ ШИГ",
+    artist: "Davaidasha",
     cover: "photos/cover.jpg", // дууны зураг (байхгүй бол өнгөтэй дэвсгэр гарна)
   },
 
