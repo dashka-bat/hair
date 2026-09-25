@@ -169,6 +169,8 @@
   .slide { position: absolute; inset: 0; opacity: 0; transition: opacity 1.2s; }
   .slide.on { opacity: 1; }
   .player { position: relative; z-index: 3; margin: -34px 0 0 clamp(0px, 18vw, 260px); width: min(330px, 84vw); background: rgba(255,255,255,.95); border-radius: 14px; box-shadow: 0 8px 24px rgba(160,60,90,.2); padding: 12px 16px 8px; }
+  .p-video { margin: -4px -6px 10px; border-radius: 10px; overflow: hidden; height: 200px; background: #000; }
+  .p-video iframe { display: block; width: 100%; height: 100%; }
   .p-top { display: flex; gap: 12px; align-items: center; }
   .p-cover { width: 48px; height: 48px; border-radius: 8px; flex: none; }
   .p-meta { flex: 1; min-width: 0; }
@@ -320,6 +322,7 @@
     <button class="btn-next back"></button>
     <div class="photo-frame rv"><div class="photo" id="photo"></div></div>
     <div class="player rv" style="--i:2">
+      <div class="p-video hidden" id="pVideo"><div id="ytFrame"></div></div>
       <div class="p-top">
         <div class="p-cover" id="pCover"></div>
         <div class="p-meta"><b id="pTitle"></b><span id="pArtist"></span><div class="p-bar" id="pBar"><i id="pFill"></i></div></div>
@@ -466,7 +469,7 @@ $("gifts").innerHTML = ["s-bouquet", "s-memory", "s-letter"].map((to, i) =>
 ).join("");
 document.querySelectorAll(".gift").forEach(g => g.onclick = () => {
   g.classList.add("opening");
-  if (g.dataset.to === "s-memory") audio.play().catch(() => {});
+  if (g.dataset.to === "s-memory") media.play();
   setTimeout(() => {
     show(g.dataset.to);
     g.classList.remove("opening");
@@ -531,25 +534,73 @@ if (photos.length > 1) {
   }, 3500);
 }
 
-const audio = $("audio");
-audio.src = C.song.file;
-audio.loop = true;
 $("pTitle").textContent = C.song.title;
 $("pArtist").textContent = C.song.artist;
-$("pCover").style.background = `url('${encodeURI(C.song.cover)}') center/cover no-repeat, linear-gradient(135deg, #1d3557, #6b9ac4)`;
+const ytThumb = C.song.youtube ? `url('https://i.ytimg.com/vi/${encodeURIComponent(C.song.youtube)}/hqdefault.jpg') center/cover no-repeat, ` : "";
+$("pCover").style.background = `url('${encodeURI(C.song.cover)}') center/cover no-repeat, ${ytThumb}linear-gradient(135deg, #1d3557, #6b9ac4)`;
 const ICON_PLAY = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`;
 const ICON_PAUSE = `<svg viewBox="0 0 24 24"><path d="M7 5h4v14H7zm6 0h4v14h-4z"/></svg>`;
-const syncPlay = () => $("pPlay").innerHTML = audio.paused ? ICON_PLAY : ICON_PAUSE;
-audio.onplay = audio.onpause = syncPlay;
+let loop = true, media = null;
+const syncPlay = () => $("pPlay").innerHTML = media && !media.paused() ? ICON_PAUSE : ICON_PLAY;
+const setProgress = f => $("pFill").style.width = f * 100 + "%";
+
+/* mp3 файл (song.file) */
+function audioMedia(src) {
+  const a = $("audio");
+  a.src = src;
+  a.loop = true;
+  a.onplay = a.onpause = syncPlay;
+  a.ontimeupdate = () => { if (a.duration) setProgress(a.currentTime / a.duration); };
+  return {
+    play: () => a.play().catch(() => {}),
+    pause: () => a.pause(),
+    paused: () => a.paused,
+    seek: f => { if (a.duration) a.currentTime = f * a.duration; },
+    setLoop: v => { a.loop = v; },
+  };
+}
+
+/* YouTube бичлэг (song.youtube) — тоглуулагч дотор жижиг бичлэгээр харагдана */
+function youtubeMedia(id) {
+  let yt = null, wantPlay = false, playing = false;
+  $("pVideo").classList.remove("hidden");
+  window.onYouTubeIframeAPIReady = () => {
+    yt = new YT.Player("ytFrame", {
+      videoId: id,
+      playerVars: { playsinline: 1, rel: 0 },
+      events: {
+        onReady: () => { if (wantPlay) yt.playVideo(); },
+        onStateChange: e => {
+          playing = e.data === YT.PlayerState.PLAYING;
+          if (e.data === YT.PlayerState.ENDED && loop) { yt.seekTo(0, true); yt.playVideo(); }
+          syncPlay();
+        },
+      },
+    });
+  };
+  const s = document.createElement("script");
+  s.src = "https://www.youtube.com/iframe_api";
+  document.head.appendChild(s);
+  const ready = () => yt && typeof yt.getDuration === "function";
+  setInterval(() => { if (ready() && yt.getDuration()) setProgress(yt.getCurrentTime() / yt.getDuration()); }, 500);
+  return {
+    play: () => { wantPlay = true; if (ready()) yt.playVideo(); },
+    pause: () => { wantPlay = false; if (ready()) yt.pauseVideo(); },
+    paused: () => !playing,
+    seek: f => { if (ready() && yt.getDuration()) yt.seekTo(f * yt.getDuration(), true); },
+    setLoop: () => {},
+  };
+}
+
+media = C.song.youtube ? youtubeMedia(C.song.youtube) : audioMedia(C.song.file);
 syncPlay();
-$("pPlay").onclick = () => audio.paused ? audio.play().catch(() => {}) : audio.pause();
-audio.ontimeupdate = () => { if (audio.duration) $("pFill").style.width = audio.currentTime / audio.duration * 100 + "%"; };
+$("pPlay").onclick = () => media.paused() ? media.play() : media.pause();
 $("pBar").onclick = e => {
   const r = e.currentTarget.getBoundingClientRect();
-  if (audio.duration) audio.currentTime = (e.clientX - r.left) / r.width * audio.duration;
+  media.seek((e.clientX - r.left) / r.width);
 };
-$("pPrev").onclick = $("pNext").onclick = () => { audio.currentTime = 0; };
-$("pRepeat").onclick = e => { audio.loop = !audio.loop; e.currentTarget.classList.toggle("dim", !audio.loop); };
+$("pPrev").onclick = $("pNext").onclick = () => media.seek(0);
+$("pRepeat").onclick = e => { loop = !loop; media.setLoop(loop); e.currentTarget.classList.toggle("dim", !loop); };
 $("pShuffle").onclick = e => e.currentTarget.classList.toggle("dim");
 
 /* ---------- 5. Letter ---------- */

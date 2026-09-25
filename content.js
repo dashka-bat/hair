@@ -32,7 +32,8 @@ const CONTENT = {
   // зургаа photos/ хавтсанд хийнэ; олон зураг бол ээлжлэн солигдоно
   photos: ["photos/1.jpg", "photos/2.jpg", "photos/3.jpg"],
   song: {
-    file: "music.mp3", // дуугаа энэ хавтсанд music.mp3 нэрээр хуулна
+    youtube: "I9_QA6_8mZA", // YouTube бичлэгийн ID (youtube.com/watch?v=ЭНЭ) — хоосон "" бол доорх mp3-г тоглуулна
+    file: "music.mp3", // mp3 ашиглах бол энэ хавтсанд music.mp3 нэрээр хуулна
     title: "ЯГ ЧАМ ШИГ",
     artist: "Davaidasha",
     cover: "photos/cover.jpg", // дууны зураг (байхгүй бол өнгөтэй дэвсгэр гарна)

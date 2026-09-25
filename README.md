@@ -12,7 +12,7 @@
 
 - **`content.js`** — бүх текст (зөвхөн энийг засна)
 - **`photos/`** — `1.jpg`, `2.jpg`, `3.jpg` (олон бол ээлжилнэ), дууны зураг `cover.jpg`
-- **`music.mp3`** — дуу (2-р бэлгийг нээхэд эхэлнэ)
+- **Дуу** — `content.js` дахь `song.youtube`-д YouTube бичлэгийн ID (одоо: Davaidasha – Яг чам шиг), эсвэл `youtube: ""` болгоод `music.mp3` хуулна
 
 Шалгах: `open index.html` · тодорхой дэлгэц: `index.html#s-bouquet`, `#s-memory`, `#s-letter`
 
