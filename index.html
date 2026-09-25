@@ -192,6 +192,7 @@
     clip-path: polygon(2% 0, 98% 0, 100% 4%, 98.5% 9%, 100% 14%, 98% 20%, 99.5% 26%, 98% 32%, 100% 38%, 98.5% 45%, 100% 52%, 98% 58%, 99.5% 65%, 98% 72%, 100% 79%, 98.5% 86%, 100% 93%, 98% 100%, 2% 100%, 0 95%, 1.5% 88%, 0 81%, 2% 74%, .5% 67%, 2% 60%, 0 53%, 1.5% 46%, 0 39%, 2% 32%, .5% 25%, 2% 18%, 0 11%, 1.5% 5%);
   }
   .paper p { margin: 0 0 32px; font-weight: 800; color: #4b2230; font-size: clamp(.92rem, 1.5vw, 1.05rem); }
+  .paper p:last-child { margin-bottom: 0; }
   .paper .sign { text-align: right; color: #e0527e; font-family: var(--title); margin: 0; }
   .let-foot { width: min(640px, 92vw); display: flex; align-items: flex-end; margin-top: 12px; position: relative; z-index: 2; }
   .let-foot .btn-next { margin-left: auto; }
@@ -554,10 +555,12 @@ $("pShuffle").onclick = e => e.currentTarget.classList.toggle("dim");
 /* ---------- 5. Letter ---------- */
 $("lTitle").textContent = C.letterTitle;
 C.letter.forEach(t => { const p = document.createElement("p"); p.textContent = t; $("paper").appendChild(p); });
-const sign = document.createElement("p");
-sign.className = "sign";
-sign.textContent = C.letterSign;
-$("paper").appendChild(sign);
+if (C.letterSign) {
+  const sign = document.createElement("p");
+  sign.className = "sign";
+  sign.textContent = C.letterSign;
+  $("paper").appendChild(sign);
+}
 
 /* index.html#s-letter гэх мэтээр шууд тухайн дэлгэцийг нээж шалгана */
 if (location.hash && $(location.hash.slice(1))?.classList.contains("screen")) show(location.hash.slice(1));
