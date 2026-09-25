@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR Card</title>
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  body { font-family: 'Nunito', sans-serif; background: #fff5f7; color: #4a2c36; margin: 0; padding: 24px 16px; text-align: center; }
+  .controls { max-width: 480px; margin: 0 auto 24px; display: flex; gap: 8px; }
+  input { flex: 1; min-width: 0; padding: 10px 12px; border: 2px solid #ffd1dc; border-radius: 10px; font: inherit; }
+  button { padding: 10px 16px; border: none; border-radius: 10px; background: #ff6b9a; color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+  .card {
+    display: inline-block; background: #fff; padding: 28px 28px 22px; border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(255,107,154,.2); border: 3px dashed #ff9ec0;
+  }
+  .card h1 { font-family: 'Dancing Script', cursive; color: #ff6b9a; font-size: 2.2rem; margin: 0 0 16px; }
+  #qr { display: inline-block; padding: 12px; background: #fff; }
+  .card p { color: #9b7682; margin: 14px 0 0; }
+  .actions { margin-top: 20px; display: flex; gap: 8px; justify-content: center; }
+  @media print { .controls, .actions { display: none; } body { background: #fff; } .card { box-shadow: none; } }
+</style>
+</head>
+<body>
+  <div class="controls">
+    <input id="url" value="https://dashka-bat.github.io/hair/">
+    <button onclick="render()">Үүсгэх</button>
+  </div>
+
+  <div class="card">
+    <h1>Scan me 💗</h1>
+    <div id="qr"></div>
+    <p>Утасныхаа камераар уншуулаарай 🎁</p>
+  </div>
+
+  <div class="actions">
+    <button onclick="download()">PNG татах</button>
+    <button onclick="print()">Хэвлэх</button>
+  </div>
+
+<script>
+function render() {
+  const el = document.getElementById("qr");
+  el.innerHTML = "";
+  new QRCode(el, { text: document.getElementById("url").value.trim(), width: 240, height: 240, colorDark: "#4a2c36", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
+}
+function download() {
+  const canvas = document.querySelector("#qr canvas");
+  const a = document.createElement("a");
+  a.href = canvas.toDataURL("image/png");
+  a.download = "birthday-qr.png";
+  a.click();
+}
+render();
+</script>
+</body>
+</html>
