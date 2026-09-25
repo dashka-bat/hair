@@ -3,56 +3,118 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>QR Card</title>
-<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<title>QR 💗</title>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@800&family=Nunito:wght@600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <style>
-  body { font-family: 'Nunito', sans-serif; background: #fff5f7; color: #4a2c36; margin: 0; padding: 24px 16px; text-align: center; }
-  .controls { max-width: 480px; margin: 0 auto 24px; display: flex; gap: 8px; }
-  input { flex: 1; min-width: 0; padding: 10px 12px; border: 2px solid #ffd1dc; border-radius: 10px; font: inherit; }
-  button { padding: 10px 16px; border: none; border-radius: 10px; background: #ff6b9a; color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
-  .card {
-    display: inline-block; background: #fff; padding: 28px 28px 22px; border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(255,107,154,.2); border: 3px dashed #ff9ec0;
-  }
-  .card h1 { font-family: 'Dancing Script', cursive; color: #ff6b9a; font-size: 2.2rem; margin: 0 0 16px; }
-  #qr { display: inline-block; padding: 12px; background: #fff; }
-  .card p { color: #9b7682; margin: 14px 0 0; }
+  body { font-family: 'Nunito', sans-serif; background: #fdeef0; color: #4a1a2a; margin: 0; padding: 24px 16px; text-align: center; }
+  .controls { max-width: 480px; margin: 0 auto 20px; display: flex; gap: 8px; }
+  input { flex: 1; min-width: 0; padding: 10px 12px; border: 2px solid #f2b8c6; border-radius: 10px; font: inherit; }
+  button { padding: 10px 18px; border: none; border-radius: 999px; background: #e2587f; color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+  .card { display: inline-block; background: #fff; padding: 22px 22px 18px; border-radius: 24px; box-shadow: 0 10px 30px rgba(226,88,127,.2); }
+  .card h1 { font-family: 'M PLUS Rounded 1c', sans-serif; color: #e2587f; font-size: 1.8rem; margin: 0 0 10px; }
+  canvas { display: block; width: min(420px, 82vw); height: auto; }
+  .card p { color: #b35c78; margin: 10px 0 0; font-weight: 700; }
   .actions { margin-top: 20px; display: flex; gap: 8px; justify-content: center; }
   @media print { .controls, .actions { display: none; } body { background: #fff; } .card { box-shadow: none; } }
 </style>
 </head>
 <body>
   <div class="controls">
-    <input id="url" value="https://dashka-bat.github.io/hair/">
-    <button onclick="render()">Үүсгэх</button>
+    <input id="url" aria-label="URL">
+    <button id="make">Үүсгэх</button>
   </div>
 
   <div class="card">
     <h1>Scan me 💗</h1>
-    <div id="qr"></div>
+    <canvas id="c" width="1200" height="1200"></canvas>
     <p>Утасныхаа камераар уншуулаарай 🎁</p>
   </div>
 
   <div class="actions">
-    <button onclick="download()">PNG татах</button>
+    <button id="dl">PNG татах</button>
     <button onclick="print()">Хэвлэх</button>
   </div>
 
 <script>
-function render() {
-  const el = document.getElementById("qr");
-  el.innerHTML = "";
-  new QRCode(el, { text: document.getElementById("url").value.trim(), width: 240, height: 240, colorDark: "#4a2c36", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
+const SITE = "https://hair-ivory.vercel.app/";
+const urlIn = document.getElementById("url");
+urlIn.value = location.protocol.startsWith("http") ? location.origin + "/" : SITE;
+
+/* Зүрхний тэгшитгэл: (x² + y² − 1)³ − x²y³ ≤ 0 (y дээшээ) */
+const inHeart = (x, y) => { const a = x * x + y * y - 1; return a * a * a - x * x * y * y * y <= 0; };
+const HEART = "M0 -3 C-4 -9 -12 -7 -12 0 C-12 6 -5 10 0 14 C5 10 12 6 12 0 C12 -7 4 -9 0 -3Z";
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
 }
-function download() {
-  const canvas = document.querySelector("#qr canvas");
+
+function draw() {
+  const qr = qrcode(0, "H");
+  qr.addData(urlIn.value.trim());
+  qr.make();
+  const n = qr.getModuleCount();
+  const quiet = 3;                       // QR-ийн эргэн тойрны цагаан зай (модулиар)
+  const S = n + quiet * 2;
+  const side = 1.25, cx = 0, cy = 0.18;  // QR блокийн хэмжээ, төв (зүрхний нэгжээр)
+  const cell = side / S;
+  const X0 = -1.2, Y1 = 1.3, SPAN = 2.4; // зүрхийг багтаах талбай
+  const grid = Math.ceil(SPAN / cell);
+  const ox = Math.round((cx - side / 2 - X0) / cell), oy = Math.round((Y1 - (cy + side / 2)) / cell);
+
+  const cv = document.getElementById("c"), ctx = cv.getContext("2d");
+  const px = cv.width / (grid + 2), pad = px;
+  ctx.clearRect(0, 0, cv.width, cv.height);
+
+  let seed = 7;
+  const rand = () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296;
+
+  // зүрхний QR маягийн чимэглэл
+  for (let gy = 0; gy < grid; gy++) for (let gx = 0; gx < grid; gx++) {
+    const inBlock = gx >= ox - 1 && gx < ox + S + 1 && gy >= oy - 1 && gy < oy + S + 1;
+    const x = X0 + (gx + .5) * cell, y = Y1 - (gy + .5) * cell;
+    if (inBlock || !inHeart(x, y)) continue;
+    const r = rand();
+    ctx.fillStyle = r < .42 ? "#e2587f" : r < .62 ? "#f59ab3" : "#fde0e7";
+    roundRect(ctx, pad + gx * px + px * .06, pad + gy * px + px * .06, px * .88, px * .88, px * .28);
+    ctx.fill();
+  }
+
+  // цагаан дэвсгэр + жинхэнэ QR
+  ctx.fillStyle = "#fff";
+  roundRect(ctx, pad + ox * px, pad + oy * px, S * px, S * px, px * 1.6);
+  ctx.fill();
+  ctx.fillStyle = "#7a0f33";
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
+    if (qr.isDark(r, c)) ctx.fillRect(pad + (ox + quiet + c) * px, pad + (oy + quiet + r) * px, px + .5, px + .5);
+  }
+
+  // голын жижиг зүрх (H түвшний алдаа засалт ~30%-ийг даана, энэ нь ~4% эзэлнэ)
+  const mid = n / 2, box = Math.max(5, Math.round(n * .2));
+  const bx = pad + (ox + quiet + mid - box / 2) * px, by = pad + (oy + quiet + mid - box / 2) * px;
+  ctx.fillStyle = "#fff";
+  roundRect(ctx, bx, by, box * px, box * px, px);
+  ctx.fill();
+  ctx.save();
+  ctx.translate(bx + box * px / 2, by + box * px / 2 - px * .2);
+  ctx.scale(box * px / 34, box * px / 34);
+  ctx.fillStyle = "#e2587f";
+  ctx.fill(new Path2D(HEART));
+  ctx.restore();
+}
+
+document.getElementById("make").onclick = draw;
+document.getElementById("dl").onclick = () => {
   const a = document.createElement("a");
-  a.href = canvas.toDataURL("image/png");
-  a.download = "birthday-qr.png";
+  a.href = document.getElementById("c").toDataURL("image/png");
+  a.download = "qr-heart.png";
   a.click();
-}
-render();
+};
+draw();
 </script>
 </body>
 </html>

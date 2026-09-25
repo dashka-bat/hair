@@ -522,7 +522,7 @@ $("bouquet").innerHTML = `
 /* ---------- 4. Memory + song ---------- */
 const photos = C.photos.length ? C.photos : [""];
 $("photo").innerHTML = photos.map((src, i) =>
-  `<div class="slide${i ? "" : " on"}" style="background:url('${encodeURI(src)}') center/cover no-repeat, var(--sky)"></div>`
+  `<div class="slide${i ? "" : " on"}" style="background:url('${encodeURI(src)}') center 30%/cover no-repeat, var(--sky)"></div>`
 ).join("");
 if (photos.length > 1) {
   let cur = 0;
